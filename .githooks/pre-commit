@@ -1,0 +1,10 @@
+#!/bin/sh
+# Run SwiftLint before every commit. Blocks the commit if there are errors.
+
+if ! command -v swiftlint >/dev/null 2>&1; then
+  echo "warning: SwiftLint not installed — skipping lint check"
+  exit 0
+fi
+
+swiftlint lint --quiet
+exit $?
