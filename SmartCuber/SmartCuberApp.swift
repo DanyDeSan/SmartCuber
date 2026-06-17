@@ -23,7 +23,7 @@ struct SmartCuberApp: App {
 
   var body: some Scene {
     WindowGroup {
-      ContentView()
+      AppCoordinatorView()
     }
     .modelContainer(sharedModelContainer)
   }

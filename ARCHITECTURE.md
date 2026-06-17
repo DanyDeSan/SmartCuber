@@ -26,9 +26,29 @@ The app follows **MVVM (Model-View-ViewModel)** combined with the **Coordinator*
 
 | Pattern | Where used | Reason |
 |---|---|---|
-| Coordinator | App-wide navigation | Decouples views from navigation decisions |
+| Coordinator | App-wide navigation (`AppCoordinator` + `AppCoordinatorView`) | Decouples views from navigation decisions; owns `NavigationPath` |
 
 > When a new design pattern is adopted for any feature, add a row to this table with where it is used and why.
+
+---
+
+## Project Structure
+
+```
+SmartCuber/
+├── SmartCuber.xcodeproj/           # Xcode project (objectVersion 77, modern file sync)
+├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
+│   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts AppCoordinatorView
+│   ├── AppCoordinator.swift        # Root coordinator; owns NavigationPath
+│   ├── AppCoordinatorView.swift    # NavigationStack root; instantiates AppCoordinator
+│   ├── TimerView.swift             # Main timer screen (first view)
+│   ├── Solve.swift                 # Core SwiftData @Model
+│   └── Assets.xcassets/            # App icon + accent color
+└── SmartCuberTests/                # Unit test target — Swift Testing
+    └── SmartCuberTests.swift       # Tests for model logic
+```
+
+> Keep this section in sync with the actual filesystem. Any file or folder added, removed, or reorganized must be reflected here.
 
 ---
 
