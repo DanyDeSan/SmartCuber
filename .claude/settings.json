@@ -10,6 +10,40 @@
           }
         ]
       }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ROOT=$(git rev-parse --show-toplevel); jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"PostCompact\", \"additionalContext\": (\"PRACTICES.md:\\n\" + .)}}' \"$ROOT/PRACTICES.md\"; jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"PostCompact\", \"additionalContext\": (\"ARCHITECTURE.md:\\n\" + .)}}' \"$ROOT/ARCHITECTURE.md\"; jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"PostCompact\", \"additionalContext\": (\"TECHNOLOGIES.md:\\n\" + .)}}' \"$ROOT/TECHNOLOGIES.md\"; jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"PostCompact\", \"additionalContext\": (\"LESSONS_LEARNED.md:\\n\" + .)}}' \"$ROOT/LESSONS_LEARNED.md\"",
+            "statusMessage": "Restoring project context after compaction..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "file=$(jq -r '.tool_input.file_path // \"\"'); echo \"$file\" | grep -q '\\.swift$' && swiftlint lint --quiet \"$file\" 2>/dev/null || true",
+            "statusMessage": "Running SwiftLint..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // \"\"'); if echo \"$cmd\" | grep -qE '(--force|-f\\b|--force-with-lease)' && echo \"$cmd\" | grep -qE '\\bmain\\b'; then echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Force push to main is blocked. Use a feature branch or ask the user explicitly.\"}}'; fi"
+          }
+        ]
+      }
     ]
   }
 }
