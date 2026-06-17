@@ -36,7 +36,7 @@ The app follows **MVVM (Model-View-ViewModel)** combined with the **Coordinator*
 
 ```
 SmartCuber/
-├── SmartCuber.xcodeproj/           # Xcode project (objectVersion 77, modern file sync)
+├── SmartCuber.xcodeproj/           # Xcode project
 ├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
 │   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts AppCoordinatorView
 │   ├── AppCoordinator.swift        # Root coordinator; owns NavigationPath
@@ -54,6 +54,6 @@ SmartCuber/
 
 ## Notes
 
-- All `@Model` classes live in `SmartCuber/` alongside views (see `CLAUDE.md` for project structure).
+- All `@Model` classes live in `SmartCuber/` alongside views.
 - `ModelContainer` is configured once in `SmartCuberApp.swift` and injected via `.modelContainer()`.
 - ViewModels are instantiated by their parent Coordinator or parent View — never inside a `@Query` call.

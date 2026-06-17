@@ -3,6 +3,7 @@
 //  SmartCuber
 //
 
+import Observation
 import SwiftUI
 
 @Observable
