@@ -1,0 +1,112 @@
+# SwiftLint configuration following Google Swift Style Guide
+# https://google.github.io/swift/
+
+included:
+  - SmartCuber
+  - SmartCuberTests
+
+excluded:
+  - SmartCuber.xcodeproj
+
+# --- Rules ---
+
+disabled_rules:
+  - trailing_whitespace       # Google does not enforce trailing whitespace removal
+  - todo                      # TODOs are acceptable during development
+
+opt_in_rules:
+  - array_init                # Prefer Array(_:) over .init
+  - closure_spacing           # Spaces inside closure braces
+  - collection_alignment      # Align collection elements
+  - contains_over_filter_count # Use contains over filter().count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - discouraged_optional_boolean
+  - empty_collection_literal  # Prefer isEmpty over == []
+  - empty_string              # Prefer isEmpty over == ""
+  - explicit_init             # Avoid explicit .init() calls
+  - first_where               # Use first(where:) over filter().first
+  - flatmap_over_map_reduce
+  - implicit_return            # Prefer implicit returns in closures
+  - last_where
+  - literal_expression_end_indentation
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_parameters
+  - operator_usage_whitespace
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - sorted_imports            # Imports must be sorted alphabetically
+  - toggle_bool               # Use x.toggle() over x = !x
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_between_cases
+  - indentation_width         # Google: 2-space indentation
+  - force_unwrapping          # Google: discourage force unwrap
+
+# --- Lengths ---
+
+line_length:
+  warning: 100
+  error: 200
+  ignores_urls: true
+  ignores_comments: true
+
+file_length:
+  warning: 400
+  error: 1000
+
+function_body_length:
+  warning: 40
+  error: 80
+
+type_body_length:
+  warning: 250
+  error: 350
+
+# --- Naming ---
+# Google requires descriptive, unambiguous names.
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 60
+    error: 80
+  excluded:
+    - id
+    - x
+    - y
+    - z
+    - i
+    - j
+
+type_name:
+  min_length: 3
+  max_length:
+    warning: 50
+    error: 60
+
+# --- Indentation ---
+# Google Swift Style Guide mandates 2-space indentation.
+
+indentation_width:
+  indentation_width: 2
+
+# --- Complexity ---
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+# --- Force usage ---
+# Google discourages force unwrap and force cast.
+
+force_cast: error
+force_try: warning
+force_unwrapping: warning
+
+# --- Vertical whitespace ---
+
+vertical_whitespace:
+  max_empty_lines: 1
