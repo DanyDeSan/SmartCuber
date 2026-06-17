@@ -4,6 +4,11 @@ Reference document for Git conventions, workflows, and AI agent rules on this pr
 
 ---
 
+## Code Style
+
+- Indentation: **2 spaces** (Google Swift Style Guide). Configure Xcode manually: **Xcode → Settings → Text Editing → Indentation → Prefer indent using: Spaces, Width: 2**.
+- All Swift files are linted with SwiftLint on every edit (`.swiftlint.yml` at project root).
+
 ## Git Conventions
 
 - Default branch: `main`

@@ -4,6 +4,12 @@ SmartCuber is an iOS app for tracking Rubik's cube solves. Record your times, vi
 
 Built with SwiftUI and SwiftData for a native, fast experience on iPhone and iPad.
 
+## Development Setup
+
+This project follows the [Google Swift Style Guide](https://google.github.io/swift/). Xcode's default indentation is 4 spaces — change it to 2 before writing code:
+
+**Xcode → Settings → Text Editing → Indentation → Prefer indent using: Spaces, Width: 2**
+
 ## Documentation
 
 | File | Purpose |
