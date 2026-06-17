@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "ROOT=$(git rev-parse --show-toplevel); jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": (\"PRACTICES.md:\\n\" + .)}}' \"$ROOT/PRACTICES.md\"; jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": (\"ARCHITECTURE.md:\\n\" + .)}}' \"$ROOT/ARCHITECTURE.md\"; jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": (\"TECHNOLOGIES.md:\\n\" + .)}}' \"$ROOT/TECHNOLOGIES.md\"; jq -Rs '{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": (\"LESSONS_LEARNED.md:\\n\" + .)}}' \"$ROOT/LESSONS_LEARNED.md\"",
+            "statusMessage": "Loading project context..."
+          }
+        ]
+      }
+    ]
+  }
+}
