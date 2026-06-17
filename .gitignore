@@ -1,0 +1,77 @@
+# ========================
+# macOS
+# ========================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ========================
+# Xcode
+# ========================
+
+# User-specific Xcode settings
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# Build output
+build/
+DerivedData/
+*.hmap
+
+# Xcode Scheme (shared schemes are intentionally committed — per-user are not)
+!*.xcscheme
+
+# ========================
+# Swift Package Manager
+# ========================
+.build/
+.swiftpm/
+Package.resolved
+
+# ========================
+# CocoaPods (not in use, but listed for safety)
+# ========================
+Pods/
+Podfile.lock
+*.xcworkspace
+!*.xcodeproj/project.xcworkspace
+
+# ========================
+# Carthage
+# ========================
+Carthage/Build/
+Carthage/Checkouts/
+
+# ========================
+# Fastlane
+# ========================
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# ========================
+# Instruments / Profiling
+# ========================
+*.trace
+
+# ========================
+# Simulator
+# ========================
+iphone_backup/
+
+# ========================
+# Misc
+# ========================
+*.orig
+*~
+*.swp
+*.swo
+.env
+.env.local
+secrets.xcconfig
