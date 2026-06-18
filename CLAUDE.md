@@ -18,14 +18,16 @@ iOS app for tracking Rubik's cube solves — times, scrambles, stats, and analys
 
 ```
 SmartCuber/
-├── SmartCuber.xcodeproj/       # Xcode project (objectVersion 77, modern file sync)
-├── SmartCuber/                 # App target — PBXFileSystemSynchronizedRootGroup
-│   ├── SmartCuberApp.swift     # @main entry point, ModelContainer setup
-│   ├── ContentView.swift       # Root navigation view (NavigationSplitView)
-│   ├── Solve.swift             # Core SwiftData model
-│   └── Assets.xcassets/        # App icon + accent color
-└── SmartCuberTests/            # Unit test target — Swift Testing
-    └── SmartCuberTests.swift   # Tests for model logic
+├── SmartCuber.xcodeproj/           # Xcode project
+├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
+│   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts AppCoordinatorView
+│   ├── AppCoordinator.swift        # Root coordinator; owns NavigationPath
+│   ├── AppCoordinatorView.swift    # NavigationStack root; instantiates AppCoordinator
+│   ├── TimerView.swift             # Main timer screen (first view)
+│   ├── Solve.swift                 # Core SwiftData @Model
+│   └── Assets.xcassets/            # App icon + accent color
+└── SmartCuberTests/                # Unit test target — Swift Testing
+    └── SmartCuberTests.swift       # Tests for model logic
 ```
 
 ## Key Conventions
@@ -39,7 +41,7 @@ SmartCuber/
 
 ### SwiftUI
 
-- Prefer `NavigationSplitView` for iPad/iPhone adaptive layouts.
+- Navigation is coordinator-driven via `AppCoordinator`. Views never push or present directly.
 - Extract list rows and detail views into separate `View` structs — don't nest complex bodies.
 - Use `#Preview` macros with `inMemory: true` model containers for previews.
 

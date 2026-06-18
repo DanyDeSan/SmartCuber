@@ -17,6 +17,8 @@ Any time a new technology is adopted, it must be added here.
 |---|---|
 | SwiftUI | Declarative UI layer for all views |
 | SwiftData | Persistence — model definition, storage, and reactive queries |
+| Swift Observation | Reactive state via `@Observable` — **Combine is not used** |
+| Swift Concurrency | Async work via `async`/`await` and `Task` — **Combine is not used** |
 | Swift Testing | Unit testing (`@Test`, `#expect`, `#require`) |
 
 ## Tools
