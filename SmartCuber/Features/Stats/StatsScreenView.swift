@@ -3,41 +3,31 @@
 //  SmartCuber
 //
 //  The Stats tab: average cards up top, full solve history below in two
-//  columns. The session best is rendered in mint.
+//  columns. The session best is rendered in mint. Owns its own solve query.
 //
 
 import SwiftData
 import SwiftUI
 
 struct StatsScreenView: View {
-  let solves: [Solve]
-  let stats: SolveStatistics
+  @Query(sort: \Solve.date, order: .reverse) private var solves: [Solve]
   let sessionName: String
   let puzzleLabel: String
-  let onSelectTab: (AppTab) -> Void
 
-  private var bestSolveID: PersistentIdentifier? {
-    solves.filter { !$0.isDNF }
-      .min { $0.effectiveDuration < $1.effectiveDuration }?
-      .persistentModelID
-  }
+  private var model: StatsViewModel { StatsViewModel(solves: solves) }
 
   var body: some View {
-    VStack(spacing: 0) {
-      content
-      CubeTabBar(active: .stats, onSelect: onSelectTab)
-    }
-    .background(Theme.background.ignoresSafeArea())
-  }
-
-  private var content: some View {
     VStack(alignment: .leading, spacing: 0) {
       header
       cards
-      history
+      if model.isEmpty {
+        emptyState
+      } else {
+        history
+      }
     }
-    .padding(.leading, 46)
-    .frame(maxHeight: .infinity, alignment: .top)
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    .background(Theme.background.ignoresSafeArea())
   }
 
   private var header: some View {
@@ -58,7 +48,8 @@ struct StatsScreenView: View {
   }
 
   private var cards: some View {
-    HStack(spacing: 9) {
+    let stats = model.statistics
+    return HStack(spacing: 9) {
       StatCardView(label: "best", value: stats.best, accent: true)
       StatCardView(label: "ao5", value: stats.ao5)
       StatCardView(label: "ao12", value: stats.ao12)
@@ -70,8 +61,23 @@ struct StatsScreenView: View {
     .padding(.top, 15)
   }
 
+  private var emptyState: some View {
+    VStack(spacing: 6) {
+      Image(systemName: "chart.bar.xaxis")
+        .font(.system(size: 30, weight: .regular))
+        .foregroundStyle(Theme.tertiary)
+      Text("No solves yet")
+        .font(Theme.sans(15, weight: .medium))
+        .foregroundStyle(Theme.secondary)
+      Text("Finish a solve on the Timer tab to start building stats.")
+        .font(Theme.sans(12.5))
+        .foregroundStyle(Theme.tertiary)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+  }
+
   private var history: some View {
-    let half = Int((Double(solves.count) / 2).rounded(.up))
+    let columns = model.historyColumns
     return VStack(alignment: .leading, spacing: 2) {
       Text("SOLVE HISTORY")
         .font(Theme.sans(10, weight: .semibold))
@@ -79,8 +85,8 @@ struct StatsScreenView: View {
         .foregroundStyle(Theme.tertiary)
         .padding(.leading, 4)
       HStack(alignment: .top, spacing: 18) {
-        column(range: 0..<half, half: half)
-        column(range: half..<solves.count, half: half)
+        column(range: columns.left)
+        column(range: columns.right)
           .overlay(alignment: .leading) {
             Rectangle().fill(Theme.hairline).frame(width: 0.5).offset(x: -9)
           }
@@ -90,10 +96,10 @@ struct StatsScreenView: View {
     .padding(.top, 14)
   }
 
-  private func column(range: Range<Int>, half: Int) -> some View {
+  private func column(range: Range<Int>) -> some View {
     VStack(spacing: 0) {
       ForEach(range, id: \.self) { position in
-        historyRow(solve: solves[position], number: solves.count - position)
+        historyRow(solve: solves[position], number: model.number(at: position))
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -111,7 +117,7 @@ struct StatsScreenView: View {
         .frame(width: 60, alignment: .leading)
       SolveTagView(
         penalty: solve.penalty,
-        isPersonalBest: solve.persistentModelID == bestSolveID)
+        isPersonalBest: solve.persistentModelID == model.bestSolveID)
       Spacer(minLength: 0)
       Text(RelativeTime.label(for: solve.date))
         .font(Theme.mono(11.5))

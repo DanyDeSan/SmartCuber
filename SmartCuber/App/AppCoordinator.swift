@@ -19,10 +19,6 @@ final class AppCoordinator {
   /// The solve highlighted in the Solves detail pane, if any.
   var selectedSolveID: PersistentIdentifier?
 
-  func select(_ tab: AppTab) {
-    selectedTab = tab
-  }
-
   func select(solve: Solve) {
     selectedSolveID = solve.persistentModelID
   }

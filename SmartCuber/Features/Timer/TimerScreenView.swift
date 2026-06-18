@@ -3,26 +3,17 @@
 //  SmartCuber
 //
 //  The decluttered timer: scramble up top, the hero time flanked by two
-//  thumb prints, and the tab bar below. Chrome dims while running; the
-//  top-bar menus dim the background behind them.
+//  thumb prints. Arming requires *two* simultaneous touches. The system tab
+//  bar hides while running for an immersive, full-screen solve.
 //
 
 import SwiftUI
-import UIKit
 
 struct TimerScreenView: View {
   @Bindable var model: TimerViewModel
   @Bindable var settings: TimerSettings
   let sessionName: String
-  let onSelectTab: (AppTab) -> Void
   let onDeleteLast: () -> Void
-
-  @State private var isPressing = false
-  @State private var menuOpen = false
-  @State private var puzzleMenuOpen = false
-
-  private var chromeDim: Double { model.phase == .running ? 0.09 : 1 }
-  private var anyMenuOpen: Bool { menuOpen || puzzleMenuOpen }
 
   var body: some View {
     ZStack {
@@ -32,25 +23,23 @@ struct TimerScreenView: View {
       VStack(spacing: 0) {
         TimerTopBar(
           scramble: model.scramble,
-          puzzleLabel: model.puzzle.label,
           sessionName: sessionName,
-          puzzleActive: puzzleMenuOpen,
-          menuActive: menuOpen,
-          onPuzzleTap: togglePuzzleMenu,
-          onMenuTap: toggleOverflowMenu)
+          puzzle: $model.puzzle,
+          inspectionEnabled: $settings.inspectionEnabled,
+          onNewScramble: model.regenerateScramble,
+          onManualEntry: {},
+          onDeleteLast: onDeleteLast)
         .opacity(chromeDim)
         .animation(.easeInOut(duration: 0.4), value: chromeDim)
 
         heroRow
-
-        CubeTabBar(active: .timer, dim: chromeDim, onSelect: onSelectTab)
       }
-
-      if anyMenuOpen { scrim }
     }
-    .overlay(alignment: .topTrailing) { if menuOpen { overflowMenu } }
-    .overlay(alignment: .topLeading) { if puzzleMenuOpen { puzzleMenu } }
+    .toolbar(model.phase == .running ? .hidden : .automatic, for: .tabBar)
+    .animation(.easeInOut(duration: 0.3), value: model.phase == .running)
   }
+
+  private var chromeDim: Double { model.phase == .running ? 0.09 : 1 }
 
   // ── hero row ──────────────────────────────────────────────
   private var heroRow: some View {
@@ -65,22 +54,18 @@ struct TimerScreenView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .padding(.horizontal, 40)
-    .contentShape(Rectangle())
-    .gesture(pressGesture)
+    .overlay(touchSurface)
   }
 
-  private var pressGesture: some Gesture {
-    DragGesture(minimumDistance: 0)
-      .onChanged { _ in
-        guard !anyMenuOpen, !isPressing else { return }
-        isPressing = true
+  /// Arms on two simultaneous touches, releases when fewer than two remain.
+  private var touchSurface: some View {
+    TwoFingerTouchSurface { isDown in
+      if isDown {
         model.pressBegan()
-      }
-      .onEnded { _ in
-        guard isPressing else { return }
-        isPressing = false
+      } else {
         model.pressEnded()
       }
+    }
   }
 
   @ViewBuilder private var hint: some View {
@@ -97,34 +82,6 @@ struct TimerScreenView: View {
         .tracking(0.5)
         .foregroundStyle(hintColor)
     }
-  }
-
-  // ── menus ─────────────────────────────────────────────────
-  private var scrim: some View {
-    Color.black.opacity(0.4)
-      .ignoresSafeArea()
-      .onTapGesture { closeMenus() }
-  }
-
-  private var overflowMenu: some View {
-    OverflowMenuView(
-      inspectionEnabled: settings.inspectionEnabled,
-      onCopyScramble: { UIPasteboard.general.string = model.scramble; closeMenus() },
-      onNewScramble: { model.regenerateScramble(); closeMenus() },
-      onToggleInspection: { settings.inspectionEnabled.toggle() },
-      onManualEntry: { closeMenus() },
-      onDeleteLast: { onDeleteLast(); closeMenus() })
-    .padding(.top, 44)
-    .padding(.trailing, 18)
-  }
-
-  private var puzzleMenu: some View {
-    PuzzleMenuView(current: model.puzzle) { puzzle in
-      model.puzzle = puzzle
-      closeMenus()
-    }
-    .padding(.top, 42)
-    .padding(.leading, 18)
   }
 
   @ViewBuilder private var ambientWash: some View {
@@ -183,24 +140,5 @@ struct TimerScreenView: View {
     case .running: return Theme.secondary
     default: return Theme.tertiary
     }
-  }
-
-  // ── menu toggles ──────────────────────────────────────────
-  // Only one menu is ever open at a time.
-  private func toggleOverflowMenu() {
-    let willOpen = !menuOpen
-    closeMenus()
-    menuOpen = willOpen
-  }
-
-  private func togglePuzzleMenu() {
-    let willOpen = !puzzleMenuOpen
-    closeMenus()
-    puzzleMenuOpen = willOpen
-  }
-
-  private func closeMenus() {
-    menuOpen = false
-    puzzleMenuOpen = false
   }
 }

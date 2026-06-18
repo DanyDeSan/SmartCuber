@@ -27,8 +27,6 @@ struct StatCardView: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.horizontal, 14)
     .padding(.vertical, 12)
-    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-    .overlay(
-      RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.hairline, lineWidth: 0.5))
+    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14))
   }
 }

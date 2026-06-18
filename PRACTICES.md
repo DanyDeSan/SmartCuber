@@ -9,6 +9,25 @@ Reference document for Git conventions, workflows, and AI agent rules on this pr
 - Indentation: **2 spaces** (Google Swift Style Guide). Configure Xcode manually: **Xcode → Settings → Text Editing → Indentation → Prefer indent using: Spaces, Width: 2**.
 - All Swift files are linted with SwiftLint on every edit (`.swiftlint.yml` at project root).
 
+## Project Structure (Modules)
+
+Source files live in feature-first modules (folders under `SmartCuber/`). The app target uses an Xcode file-system-synchronized group, so any folder added on disk is compiled automatically — no `.pbxproj` edits needed.
+
+| Folder | Holds |
+|---|---|
+| `App/` | App entry (`SmartCuberApp`), `RootView`, and navigation (`AppCoordinator`, `AppTab`). |
+| `Models/` | SwiftData `@Model`s and domain enums (`Solve`, `Session`, `Penalty`, `Puzzle`). |
+| `Services/` | Pure logic & persistence helpers (`ScrambleGenerator`, `SolveStatistics`, `SolveRecorder`, `TimeFormatter`, `RelativeTime`). |
+| `DesignSystem/` | Theme tokens, color helpers, and shared UI components (`Theme`, `Color+Hex`, `SolveTagView`). |
+| `Support/` | Cross-cutting utilities (`Haptics`). |
+| `Features/<Name>/` | One folder per feature, each containing its screen view(s), its view model, and feature-only subviews. |
+
+Rules:
+- **Each feature folder owns its view model and feature-only components.** A view model used by exactly one feature lives in that feature's folder; the app-wide `AppCoordinator` lives in `App/`.
+- View models are `@Observable` reference types **only when they hold mutable lifecycle state** (e.g. `TimerViewModel`). Read-only presenters that merely derive data from a query are **value types** (e.g. `StatsViewModel`, `SolvesViewModel`).
+- A component shared by two or more features moves up into `DesignSystem/`; it must not live inside one feature and be imported by another.
+- Keep this table and the structure section in `ARCHITECTURE.md` in sync whenever a module is added or moved.
+
 ## Git Conventions
 
 - Default branch: `main`

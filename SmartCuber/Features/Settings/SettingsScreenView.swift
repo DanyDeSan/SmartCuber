@@ -11,7 +11,6 @@ import SwiftUI
 struct SettingsScreenView: View {
   @Bindable var settings: TimerSettings
   let sessionCount: Int
-  let onSelectTab: (AppTab) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -29,9 +28,7 @@ struct SettingsScreenView: View {
       .padding(.top, 12)
 
       Spacer(minLength: 0)
-      CubeTabBar(active: .settings, onSelect: onSelectTab)
     }
-    .padding(.leading, 46)
     .background(Theme.background.ignoresSafeArea())
   }
 
@@ -104,9 +101,7 @@ private struct SettingsGroup<Content: View>: View {
         .foregroundStyle(Theme.tertiary)
         .padding(.horizontal, 4)
       VStack(spacing: 0) { content }
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay(
-          RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.hairline, lineWidth: 0.5))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14))
     }
   }
 }

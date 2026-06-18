@@ -3,35 +3,49 @@
 //  SmartCuber
 //
 //  The Solves tab: master list on the left, selected-solve detail on the
-//  right with scramble, timestamp and penalty controls.
+//  right with scramble, timestamp and penalty controls. Owns its own query.
 //
 
 import SwiftData
 import SwiftUI
 
 struct SolvesScreenView: View {
-  let solves: [Solve]
+  @Environment(\.modelContext) private var modelContext
+  @Query(sort: \Solve.date, order: .reverse) private var solves: [Solve]
   let sessionName: String
-  let selectedSolveID: PersistentIdentifier?
-  let onSelect: (Solve) -> Void
-  let onSetPenalty: (Solve, Penalty) -> Void
-  let onDelete: (Solve) -> Void
-  let onSelectTab: (AppTab) -> Void
+  let coordinator: AppCoordinator
 
-  private var selected: Solve? {
-    solves.first { $0.persistentModelID == selectedSolveID } ?? solves.first
+  private var model: SolvesViewModel {
+    SolvesViewModel(solves: solves, selectedSolveID: coordinator.selectedSolveID)
   }
 
   var body: some View {
-    VStack(spacing: 0) {
-      HStack(spacing: 0) {
-        solveList
-        detail
+    Group {
+      if model.isEmpty {
+        emptyState
+      } else {
+        HStack(spacing: 0) {
+          solveList
+          detail
+        }
       }
-      .padding(.leading, 46)
-      CubeTabBar(active: .solves, onSelect: onSelectTab)
     }
     .background(Theme.background.ignoresSafeArea())
+  }
+
+  private var emptyState: some View {
+    VStack(spacing: 6) {
+      Image(systemName: "list.bullet.rectangle")
+        .font(.system(size: 30, weight: .regular))
+        .foregroundStyle(Theme.tertiary)
+      Text("No solves yet")
+        .font(Theme.sans(15, weight: .medium))
+        .foregroundStyle(Theme.secondary)
+      Text("Solves you finish on the Timer tab will show up here.")
+        .font(Theme.sans(12.5))
+        .foregroundStyle(Theme.tertiary)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
   }
 
   // ── solve list ────────────────────────────────────────────
@@ -53,7 +67,7 @@ struct SolvesScreenView: View {
       ScrollView(showsIndicators: false) {
         VStack(spacing: 0) {
           ForEach(Array(solves.enumerated()), id: \.element.persistentModelID) { position, solve in
-            solveRow(solve: solve, number: solves.count - position)
+            solveRow(solve: solve, number: model.number(at: position))
           }
         }
       }
@@ -65,9 +79,9 @@ struct SolvesScreenView: View {
   }
 
   private func solveRow(solve: Solve, number: Int) -> some View {
-    let isActive = solve.persistentModelID == selected?.persistentModelID
+    let isActive = solve.persistentModelID == model.selected?.persistentModelID
     return Button {
-      onSelect(solve)
+      coordinator.select(solve: solve)
     } label: {
       HStack(spacing: 11) {
         Text(String(format: "%02d", number))
@@ -97,23 +111,12 @@ struct SolvesScreenView: View {
 
   // ── detail ────────────────────────────────────────────────
   @ViewBuilder private var detail: some View {
-    if let solve = selected, let number = numberFor(solve) {
+    if let solve = model.selected, let number = model.number(for: solve) {
       SolveDetailPane(
         solve: solve,
         number: number,
-        onSetPenalty: { onSetPenalty(solve, $0) },
-        onDelete: { onDelete(solve) })
-    } else {
-      Text("No solves yet")
-        .font(Theme.sans(15))
-        .foregroundStyle(Theme.secondary)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        onSetPenalty: { model.setPenalty(solve, to: $0, in: modelContext) },
+        onDelete: { model.delete(solve, coordinator: coordinator, in: modelContext) })
     }
-  }
-
-  private func numberFor(_ solve: Solve) -> Int? {
-    guard let index = solves.firstIndex(where: { $0.persistentModelID == solve.persistentModelID })
-    else { return nil }
-    return solves.count - index
   }
 }

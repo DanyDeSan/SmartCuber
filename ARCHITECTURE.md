@@ -30,6 +30,9 @@ The app follows **MVVM (Model-View-ViewModel)** combined with the **Coordinator*
 | Finite state machine | Timer ritual (`TimerViewModel` / `TimerPhase`) | Models the idle → holding → ready → running → stopped lifecycle explicitly so transitions and side effects (haptics, clock) are unambiguous |
 | Design tokens | Theming (`Theme`, `Color+Hex`) | A single source of truth for the palette/typography keeps every screen in sync with the source design |
 | Callback injection | `TimerViewModel.onSolveCompleted` | Lets the timer record solves and learn PB status without importing SwiftData, keeping the ViewModel persistence-agnostic |
+| Value-type presenters | `StatsViewModel`, `SolvesViewModel` | Read-only view models that derive data from a query are structs; only stateful models (`TimerViewModel`) are `@Observable` |
+| Native chrome + Liquid Glass | `TabView` (`RootView`) and `Menu`s (`TimerTopBar`) | The tab bar and the puzzle/overflow menus are system controls, so they adopt Liquid Glass automatically; custom card surfaces use `.glassEffect()` |
+| `UIViewRepresentable` bridge | `TwoFingerTouchSurface` | Reliable multitouch counting so the timer arms only on two simultaneous touches — something SwiftUI gestures don't express cleanly |
 
 > When a new design pattern is adopted for any feature, add a row to this table with where it is used and why.
 
@@ -37,27 +40,28 @@ The app follows **MVVM (Model-View-ViewModel)** combined with the **Coordinator*
 
 ## Project Structure
 
+Source is organized into feature-first modules (see `PRACTICES.md → Project Structure`).
+The app target is a file-system-synchronized group, so folders are compiled automatically.
+
 ```
 SmartCuber/
-├── SmartCuber.xcodeproj/           # Xcode project
-├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
-│   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts RootView
-│   ├── RootView.swift              # App root; owns coordinator/settings/timer model, renders tabs
-│   ├── AppCoordinator.swift        # Coordinator; selected tab + selected solve
-│   ├── AppTab.swift                # Tab enum (Timer / Stats / Solves / Settings)
-│   ├── Models: Solve / Session / Penalty / Puzzle   # SwiftData @Models + enums
-│   ├── View models: TimerViewModel / TimerPhase / TimerSettings  # @Observable, no SwiftUI
-│   ├── Domain: ScrambleGenerator / SolveStatistics / TimeFormatter / SolveRecorder
-│   ├── Design system: Theme / Color+Hex
-│   ├── Screens: TimerScreenView / StatsScreenView / SolvesScreenView / SettingsScreenView
-│   ├── Components: CubeTabBar / FingerTargetView / HeroTimeView / OverflowMenuView / …
-│   └── Assets.xcassets/            # App icon + accent color
-└── SmartCuberTests/                # Unit test target — Swift Testing
-    ├── SmartCuberTests.swift       # Solve model logic
-    ├── TimeFormatterTests.swift
-    ├── ScrambleGeneratorTests.swift
-    ├── SolveStatisticsTests.swift
-    └── SolvePenaltyTests.swift
+├── App/                  # SmartCuberApp, RootView (TabView), AppCoordinator, AppTab
+├── Models/               # Solve, Session, Penalty, Puzzle (SwiftData @Models + enums)
+├── Services/             # ScrambleGenerator, SolveStatistics, SolveRecorder,
+│                         #   TimeFormatter, RelativeTime
+├── DesignSystem/         # Theme, Color+Hex, SolveTagView (shared UI)
+├── Support/              # Haptics
+├── Features/
+│   ├── Timer/            # TimerScreenView, TimerViewModel, TimerPhase, TimerTopBar,
+│   │                     #   FingerTargetView, FingerprintView, HeroTimeView,
+│   │                     #   TwoFingerTouchSurface
+│   ├── Stats/            # StatsScreenView, StatsViewModel, StatCardView
+│   ├── Solves/           # SolvesScreenView, SolvesViewModel, SolveDetailPane
+│   └── Settings/         # SettingsScreenView, TimerSettings
+└── Assets.xcassets/      # App icon + accent color
+
+SmartCuberTests/          # Swift Testing: model, formatter, scramble, statistics,
+                          #   penalty and recorder suites
 ```
 
 > Keep this section in sync with the actual filesystem. Any file or folder added, removed, or reorganized must be reflected here.
@@ -70,4 +74,6 @@ SmartCuber/
 - `ModelContainer` is configured once in `SmartCuberApp.swift` and injected via `.modelContainer()`.
 - ViewModels are instantiated by their parent Coordinator or parent View — never inside a `@Query` call.
 - The app is **landscape-only on iPhone** — the timer is an immersive, full-screen experience (scramble, hero time, two thumb prints) and the Stats/Solves/Settings tabs use wide two-column layouts. The orientation lock lives in the iPhone `INFOPLIST_KEY_UISupportedInterfaceOrientations` build setting.
-- `RootView` replaces the original split-view `ContentView` as the app root: it owns the `AppCoordinator`, `TimerSettings` and `TimerViewModel`, renders the selected tab, and wires `SolveRecorder` into the timer.
+- `RootView` hosts a **native `TabView`** (Liquid Glass tab bar) and owns the `AppCoordinator`, `TimerSettings` and `TimerViewModel`. Each feature screen owns its own `@Query`; the timer hides the tab bar while running for an immersive solve.
+- **Minimum deployment is iOS 26** so the app can adopt Liquid Glass throughout (native `TabView`/`Menu`s plus `.glassEffect()` on custom card surfaces).
+- **No seeded/sample data.** A fresh install starts empty; the Stats and Solves tabs render explicit empty states, and the first finished solve lazily creates the "Casual" session via `SolveRecorder`.
