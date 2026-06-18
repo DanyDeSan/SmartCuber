@@ -17,6 +17,9 @@ Any time a new technology is adopted, it must be added here.
 |---|---|
 | SwiftUI | Declarative UI layer for all views |
 | SwiftData | Persistence — model definition, storage, and reactive queries |
+| Observation | `@Observable` view models, coordinator and settings (no Combine) |
+| Swift Concurrency | Timer clock + arm countdown via `Task` / `Task.sleep` (no Combine) |
+| UIKit | Haptic feedback (`UIFeedbackGenerator`) and the scramble clipboard only |
 | Swift Testing | Unit testing (`@Test`, `#expect`, `#require`) |
 
 ## Tools
