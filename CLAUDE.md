@@ -18,14 +18,17 @@ iOS app for tracking Rubik's cube solves — times, scrambles, stats, and analys
 
 ```
 SmartCuber/
-├── SmartCuber.xcodeproj/       # Xcode project (objectVersion 77, modern file sync)
-├── SmartCuber/                 # App target — PBXFileSystemSynchronizedRootGroup
-│   ├── SmartCuberApp.swift     # @main entry point, ModelContainer setup
-│   ├── ContentView.swift       # Root navigation view (NavigationSplitView)
-│   ├── Solve.swift             # Core SwiftData model
-│   └── Assets.xcassets/        # App icon + accent color
-└── SmartCuberTests/            # Unit test target — Swift Testing
-    └── SmartCuberTests.swift   # Tests for model logic
+├── SmartCuber.xcodeproj/           # Xcode project
+├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
+│   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts RootView
+│   ├── RootView.swift              # App root; owns coordinator/settings/timer model, renders tabs
+│   ├── AppCoordinator.swift        # Coordinator; selected tab + selected solve
+│   ├── TimerViewModel.swift        # Timer state machine (@Observable, async/await)
+│   ├── Solve.swift                 # Core SwiftData @Model (+ Session / Penalty / Puzzle)
+│   ├── …Screen/Component views     # TimerScreenView, StatsScreenView, etc.
+│   └── Assets.xcassets/            # App icon + accent color
+└── SmartCuberTests/                # Unit test target — Swift Testing
+    └── *.swift                     # Model, formatter, scramble, statistics tests
 ```
 
 ## Key Conventions
@@ -39,7 +42,7 @@ SmartCuber/
 
 ### SwiftUI
 
-- Prefer `NavigationSplitView` for iPad/iPhone adaptive layouts.
+- Navigation is coordinator-driven via `AppCoordinator`. Views never push or present directly.
 - Extract list rows and detail views into separate `View` structs — don't nest complex bodies.
 - Use `#Preview` macros with `inMemory: true` model containers for previews.
 

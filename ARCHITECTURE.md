@@ -35,9 +35,38 @@ The app follows **MVVM (Model-View-ViewModel)** combined with the **Coordinator*
 
 ---
 
+## Project Structure
+
+```
+SmartCuber/
+├── SmartCuber.xcodeproj/           # Xcode project
+├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
+│   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts RootView
+│   ├── RootView.swift              # App root; owns coordinator/settings/timer model, renders tabs
+│   ├── AppCoordinator.swift        # Coordinator; selected tab + selected solve
+│   ├── AppTab.swift                # Tab enum (Timer / Stats / Solves / Settings)
+│   ├── Models: Solve / Session / Penalty / Puzzle   # SwiftData @Models + enums
+│   ├── View models: TimerViewModel / TimerPhase / TimerSettings  # @Observable, no SwiftUI
+│   ├── Domain: ScrambleGenerator / SolveStatistics / TimeFormatter / SolveRecorder
+│   ├── Design system: Theme / Color+Hex
+│   ├── Screens: TimerScreenView / StatsScreenView / SolvesScreenView / SettingsScreenView
+│   ├── Components: CubeTabBar / FingerTargetView / HeroTimeView / OverflowMenuView / …
+│   └── Assets.xcassets/            # App icon + accent color
+└── SmartCuberTests/                # Unit test target — Swift Testing
+    ├── SmartCuberTests.swift       # Solve model logic
+    ├── TimeFormatterTests.swift
+    ├── ScrambleGeneratorTests.swift
+    ├── SolveStatisticsTests.swift
+    └── SolvePenaltyTests.swift
+```
+
+> Keep this section in sync with the actual filesystem. Any file or folder added, removed, or reorganized must be reflected here.
+
+---
+
 ## Notes
 
-- All `@Model` classes live in `SmartCuber/` alongside views (see `CLAUDE.md` for project structure).
+- All `@Model` classes live in `SmartCuber/` alongside views.
 - `ModelContainer` is configured once in `SmartCuberApp.swift` and injected via `.modelContainer()`.
 - ViewModels are instantiated by their parent Coordinator or parent View — never inside a `@Query` call.
 - The app is **landscape-only on iPhone** — the timer is an immersive, full-screen experience (scramble, hero time, two thumb prints) and the Stats/Solves/Settings tabs use wide two-column layouts. The orientation lock lives in the iPhone `INFOPLIST_KEY_UISupportedInterfaceOrientations` build setting.

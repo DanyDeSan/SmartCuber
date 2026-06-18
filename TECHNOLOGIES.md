@@ -17,8 +17,8 @@ Any time a new technology is adopted, it must be added here.
 |---|---|
 | SwiftUI | Declarative UI layer for all views |
 | SwiftData | Persistence — model definition, storage, and reactive queries |
-| Observation | `@Observable` view models, coordinator and settings (no Combine) |
-| Swift Concurrency | Timer clock + arm countdown via `Task` / `Task.sleep` (no Combine) |
+| Swift Observation | Reactive state via `@Observable` (view models, coordinator, settings) — **Combine is not used** |
+| Swift Concurrency | Async work via `async`/`await` and `Task`; the timer clock + arm countdown use `Task.sleep` — **Combine is not used** |
 | UIKit | Haptic feedback (`UIFeedbackGenerator`) and the scramble clipboard only |
 | Swift Testing | Unit testing (`@Test`, `#expect`, `#require`) |
 
