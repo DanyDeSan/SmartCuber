@@ -6,35 +6,36 @@ iOS app for tracking Rubik's cube solves — times, scrambles, stats, and analys
 
 | Layer | Technology |
 |---|---|
-| UI | SwiftUI |
+| UI | SwiftUI + Liquid Glass |
 | Persistence | SwiftData |
 | Testing | Swift Testing (`import Testing`) — **no XCTest** |
 | Language | Swift 5.x |
-| Minimum deployment | iOS 18.0 |
+| Minimum deployment | iOS 26.0 (required for Liquid Glass) |
 | Bundle ID | `com.dany.SmartCuber` |
 | Dev team | `RRULW6ZM98` |
 
 ## Project Structure
 
+Source is organized into feature-first modules (folders are compiled automatically by
+the file-system-synchronized group). See `PRACTICES.md → Project Structure` for the rules.
+
 ```
 SmartCuber/
-├── SmartCuber.xcodeproj/           # Xcode project
-├── SmartCuber/                     # App target — PBXFileSystemSynchronizedRootGroup
-│   ├── SmartCuberApp.swift         # @main entry point; ModelContainer setup; mounts AppCoordinatorView
-│   ├── AppCoordinator.swift        # Root coordinator; owns NavigationPath
-│   ├── AppCoordinatorView.swift    # NavigationStack root; instantiates AppCoordinator
-│   ├── TimerView.swift             # Main timer screen (first view)
-│   ├── Solve.swift                 # Core SwiftData @Model
-│   └── Assets.xcassets/            # App icon + accent color
-└── SmartCuberTests/                # Unit test target — Swift Testing
-    └── SmartCuberTests.swift       # Tests for model logic
+├── App/                  # SmartCuberApp, RootView (native TabView), AppCoordinator, AppTab
+├── Models/               # Solve, Session, Penalty, Puzzle
+├── Services/             # ScrambleGenerator, SolveStatistics, SolveRecorder, TimeFormatter, …
+├── DesignSystem/         # Theme, Color+Hex, SolveTagView
+├── Support/              # Haptics
+├── Features/             # Timer / Stats / Solves / Settings (each: screen + view model + subviews)
+└── Assets.xcassets/      # App icon + accent color
+SmartCuberTests/          # Swift Testing suites
 ```
 
 ## Key Conventions
 
 ### SwiftData
 
-- All `@Model` classes live in `SmartCuber/` alongside views.
+- All `@Model` classes live in `SmartCuber/Models/`.
 - `ModelContainer` is configured once in `SmartCuberApp.swift` and injected via `.modelContainer()`.
 - Use `@Query` in views for reactive data fetching; use `@Environment(\.modelContext)` for mutations.
 - Keep models small and focused. Complex business logic goes in extensions, not inside the model class.

@@ -16,16 +16,20 @@ Any time a new technology is adopted, it must be added here.
 | Framework | Purpose |
 |---|---|
 | SwiftUI | Declarative UI layer for all views |
+| Liquid Glass | iOS 26 design system — native `TabView`/`Menu`s adopt it automatically; custom card surfaces use `.glassEffect()` |
 | SwiftData | Persistence — model definition, storage, and reactive queries |
-| Swift Observation | Reactive state via `@Observable` — **Combine is not used** |
-| Swift Concurrency | Async work via `async`/`await` and `Task` — **Combine is not used** |
+| Swift Observation | Reactive state via `@Observable` (view models, coordinator, settings) — **Combine is not used** |
+| Swift Concurrency | Async work via `async`/`await` and `Task`; the timer clock + arm countdown use `Task.sleep` — **Combine is not used** |
+| UIKit | Haptic feedback (`UIFeedbackGenerator`), the scramble clipboard, and the `TwoFingerTouchSurface` multitouch bridge |
 | Swift Testing | Unit testing (`@Test`, `#expect`, `#require`) |
+
+> Minimum deployment target is **iOS 26.0** — required for Liquid Glass.
 
 ## Tools
 
 | Tool | Purpose |
 |---|---|
-| Xcode 16+ | IDE and build system (objectVersion 77 requires Xcode 16) |
+| Xcode 26+ | IDE and build system (Liquid Glass + iOS 26 SDK; objectVersion 77) |
 
 ---
 

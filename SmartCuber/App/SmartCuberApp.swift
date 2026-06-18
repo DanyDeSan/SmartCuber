@@ -10,7 +10,8 @@ import SwiftUI
 struct SmartCuberApp: App {
   var sharedModelContainer: ModelContainer = {
     let schema = Schema([
-      Solve.self
+      Solve.self,
+      Session.self
     ])
     let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -23,7 +24,7 @@ struct SmartCuberApp: App {
 
   var body: some Scene {
     WindowGroup {
-      AppCoordinatorView()
+      RootView()
     }
     .modelContainer(sharedModelContainer)
   }
