@@ -18,7 +18,9 @@ Reference document for Git conventions, workflows, and AI agent rules on this pr
 
 ## Workflows
 
+- At the **start of every session**, the first task is to fetch the latest `main` and create the development branch from there (`git fetch origin main && git switch -c <prefix>/<name> origin/main`). Do not branch off a stale local `main`.
 - Feature branches are created from `main` and merged back via PR
+- To bring `main`'s changes into a development branch, **rebase, do not merge** (`git fetch origin main && git rebase origin/main`). This keeps a linear history and avoids merge commits on feature branches.
 - All PRs require a description of what changed and why
 - Squash merge preferred to keep history clean
 
