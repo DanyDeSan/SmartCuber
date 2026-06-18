@@ -12,7 +12,7 @@ import SwiftUI
 struct RootView: View {
   @Environment(\.modelContext) private var modelContext
   @Query(sort: \Solve.date, order: .reverse) private var solves: [Solve]
-  @Query(sort: \Session.createdAt) private var sessions: [Session]
+  @Query(sort: \Session.createdAt, order: .reverse) private var sessions: [Session]
 
   @State private var coordinator = AppCoordinator()
   @State private var settings: TimerSettings

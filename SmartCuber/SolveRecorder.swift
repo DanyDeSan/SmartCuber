@@ -36,6 +36,10 @@ enum SolveRecorder {
   private static func bestEffectiveDuration(
     for puzzle: Puzzle, in context: ModelContext
   ) -> Double {
+    // Filter in memory: SwiftData `#Predicate` does not reliably match on the
+    // Codable `puzzle` / `penalty` enums at the store level (a predicate fetch
+    // returns no rows, which would make every solve look like a PB). The solve
+    // count per session stays small, so an in-memory scan is fine.
     let solves = (try? context.fetch(FetchDescriptor<Solve>())) ?? []
     return solves
       .filter { $0.puzzle == puzzle && !$0.isDNF }

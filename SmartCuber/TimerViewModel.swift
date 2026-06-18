@@ -101,7 +101,8 @@ final class TimerViewModel {
     runStart = start
     clockTask = Task { [weak self] in
       while !Task.isCancelled {
-        self?.elapsedSeconds = Date().timeIntervalSince(start)
+        guard let self else { break }
+        self.elapsedSeconds = Date().timeIntervalSince(start)
         try? await Task.sleep(for: .milliseconds(16))
       }
     }
