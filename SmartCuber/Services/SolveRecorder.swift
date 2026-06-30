@@ -12,19 +12,20 @@ import SwiftData
 
 enum SolveRecorder {
   /// Records a completed solve in the current session and returns whether it
-  /// beat the previous best for that puzzle.
+  /// beat the previous best for that puzzle. A DNF never counts as a best.
   @discardableResult
   static func record(
     duration: Double,
     scramble: String,
     puzzle: Puzzle,
+    penalty: Penalty = .none,
     in context: ModelContext
   ) -> Bool {
     let previousBest = bestEffectiveDuration(for: puzzle, in: context)
-    let isPersonalBest = duration < previousBest
 
     let solve = Solve(
-      date: .now, duration: duration, scramble: scramble, puzzle: puzzle)
+      date: .now, duration: duration, scramble: scramble, penalty: penalty, puzzle: puzzle)
+    let isPersonalBest = solve.effectiveDuration < previousBest
     solve.session = currentSession(in: context)
     context.insert(solve)
     try? context.save()
@@ -47,14 +48,22 @@ enum SolveRecorder {
       .min() ?? .infinity
   }
 
-  /// The most recently created session, creating a "Casual" one if needed.
+  /// The session marked active, falling back to the most recently created
+  /// one (promoting it to active) and lazily creating a "Casual" session if
+  /// none exist yet. The fallback keeps pre-Sessions-management installs
+  /// behaving exactly as before until the cuber explicitly picks a session.
   private static func currentSession(in context: ModelContext) -> Session {
     let descriptor = FetchDescriptor<Session>(
       sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-    if let existing = try? context.fetch(descriptor).first {
-      return existing
+    let sessions = (try? context.fetch(descriptor)) ?? []
+    if let active = sessions.first(where: \.isActive) {
+      return active
     }
-    let session = Session(name: "Casual")
+    if let mostRecent = sessions.first {
+      mostRecent.isActive = true
+      return mostRecent
+    }
+    let session = Session(name: "Casual", isActive: true)
     context.insert(session)
     return session
   }

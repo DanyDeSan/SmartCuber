@@ -24,7 +24,9 @@ struct RootView: View {
     _timerModel = State(initialValue: TimerViewModel(settings: settings))
   }
 
-  private var sessionName: String { sessions.first?.name ?? "Casual" }
+  private var sessionName: String {
+    sessions.first(where: \.isActive)?.name ?? sessions.first?.name ?? "Casual"
+  }
 
   var body: some View {
     @Bindable var coordinator = coordinator
@@ -43,19 +45,32 @@ struct RootView: View {
         SolvesScreenView(sessionName: sessionName, coordinator: coordinator)
       }
       Tab(AppTab.settings.title, systemImage: AppTab.settings.systemImage, value: AppTab.settings) {
-        SettingsScreenView(settings: settings, sessionCount: max(sessions.count, 1))
+        SettingsScreenView(
+          settings: settings,
+          sessionCount: max(sessions.count, 1),
+          onManageSessions: coordinator.presentSessionsManagement)
       }
     }
     .tint(Theme.mint)
-    .preferredColorScheme(.dark)
+    .preferredColorScheme(settings.appearance.colorScheme)
     .onAppear(perform: configure)
+    .task(id: settings.timerFont) {
+      Theme.monoDesign = settings.timerFont.design
+    }
+    .sheet(isPresented: $coordinator.isManagingSessions) {
+      SessionsScreenView()
+    }
   }
 
   // ── wiring ────────────────────────────────────────────────
   private func configure() {
-    timerModel.onSolveCompleted = { duration, scramble, puzzle in
+    timerModel.onSolveCompleted = { duration, scramble, puzzle, penalty in
       SolveRecorder.record(
-        duration: duration, scramble: scramble, puzzle: puzzle, in: modelContext)
+        duration: duration,
+        scramble: scramble,
+        puzzle: puzzle,
+        penalty: penalty,
+        in: modelContext)
     }
   }
 
