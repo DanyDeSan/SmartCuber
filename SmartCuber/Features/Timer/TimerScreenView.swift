@@ -99,16 +99,22 @@ struct TimerScreenView: View {
   private var heroValue: Double {
     switch model.phase {
     case .idle, .holding, .ready: return 0
+    case .inspecting: return max(0, 15 - model.inspectionSeconds)
     default: return model.elapsedSeconds
     }
   }
 
   private var heroSize: CGFloat { model.phase == .running ? 100 : 90 }
 
+  /// True once inspection has run past the WCA 15-second mark — the +2/DNF
+  /// risk window, surfaced as a color shift to red.
+  private var isInspectionOvertime: Bool { model.inspectionSeconds >= 15 }
+
   private var heroColor: Color {
     switch model.phase {
     case .holding: return Theme.red
     case .ready: return Theme.mint
+    case .inspecting: return isInspectionOvertime ? Theme.red : Theme.amber
     case .stopped: return model.lastSolveWasPB ? Theme.mint : Theme.text
     default: return Theme.text
     }
@@ -118,6 +124,7 @@ struct TimerScreenView: View {
     switch model.phase {
     case .holding: return Theme.red
     case .ready: return Theme.mint
+    case .inspecting: return isInspectionOvertime ? Theme.red : Theme.amber
     case .stopped where model.lastSolveWasPB: return Theme.mint
     default: return nil
     }
@@ -128,6 +135,10 @@ struct TimerScreenView: View {
     case .idle: return "Hold both prints to start"
     case .holding: return "Keep holding…"
     case .ready: return "Release to start"
+
+    case .inspecting:
+      return isInspectionOvertime ? "Inspection over — touch to start" : "Inspecting…"
+
     case .running: return "Place both fingers to stop"
     case .stopped: return nil
     }
@@ -137,6 +148,7 @@ struct TimerScreenView: View {
     switch model.phase {
     case .holding: return Theme.red
     case .ready: return Theme.mint
+    case .inspecting: return isInspectionOvertime ? Theme.red : Theme.amber
     case .running: return Theme.secondary
     default: return Theme.tertiary
     }

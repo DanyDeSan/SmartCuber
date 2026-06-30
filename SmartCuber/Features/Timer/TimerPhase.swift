@@ -14,6 +14,9 @@ enum TimerPhase: Equatable {
   case holding
   /// Armed. Prints + wash turn mint, hint reads "Release to start".
   case ready
+  /// WCA inspection running (no prints held). Touching both prints again
+  /// re-arms — the next release starts the solve clock for real.
+  case inspecting
   /// Clock running. Chrome dims, prints become stop targets.
   case running
   /// Stopped on a result. May be a personal best.

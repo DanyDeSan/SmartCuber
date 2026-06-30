@@ -100,7 +100,7 @@ struct SolvesScreenView: View {
       }
       .padding(.horizontal, 22)
       .frame(height: 46)
-      .background(isActive ? Color.white.opacity(0.04) : .clear)
+      .background(isActive ? Theme.subtleFill : .clear)
       .overlay(alignment: .leading) {
         Rectangle().fill(isActive ? Theme.mint : .clear).frame(width: 2)
       }

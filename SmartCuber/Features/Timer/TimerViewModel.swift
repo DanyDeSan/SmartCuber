@@ -16,6 +16,10 @@ final class TimerViewModel {
   private(set) var phase: TimerPhase = .idle
   /// Elapsed time of the current/last solve, in seconds.
   private(set) var elapsedSeconds: Double = 0
+  /// Elapsed time of the current WCA inspection, in seconds. Keeps ticking
+  /// through a re-arm attempt so the penalty reflects the moment the solve
+  /// actually starts, not the moment the cuber first touches to re-arm.
+  private(set) var inspectionSeconds: Double = 0
   private(set) var scramble: String
   private(set) var lastSolveWasPB = false
 
@@ -27,12 +31,16 @@ final class TimerViewModel {
   }
 
   /// Records a finished solve. Returns whether it was a personal best.
-  var onSolveCompleted: ((_ duration: Double, _ scramble: String, _ puzzle: Puzzle) -> Bool)?
+  var onSolveCompleted:
+    ((_ duration: Double, _ scramble: String, _ puzzle: Puzzle, _ penalty: Penalty) -> Bool)?
 
   @ObservationIgnored private let settings: TimerSettings
   @ObservationIgnored private var armTask: Task<Void, Never>?
   @ObservationIgnored private var clockTask: Task<Void, Never>?
+  @ObservationIgnored private var inspectionTask: Task<Void, Never>?
   @ObservationIgnored private var runStart: Date?
+  @ObservationIgnored private var isInspectionActive = false
+  @ObservationIgnored private var pendingPenalty: Penalty = .none
 
   init(settings: TimerSettings, puzzle: Puzzle = .threeByThree) {
     self.settings = settings
@@ -51,6 +59,9 @@ final class TimerViewModel {
       prepareNextSolve()
       beginHolding()
 
+    case .inspecting:
+      beginHolding()
+
     case .running:
       stopClock()
 
@@ -64,12 +75,18 @@ final class TimerViewModel {
     switch phase {
     case .holding:
       cancelArm()
-      phase = .idle
+      phase = isInspectionActive ? .inspecting : .idle
 
     case .ready:
-      startClock()
+      if isInspectionActive {
+        startClock()
+      } else if settings.inspectionEnabled {
+        beginInspecting()
+      } else {
+        startClock()
+      }
 
-    case .idle, .running, .stopped:
+    case .idle, .inspecting, .running, .stopped:
       break
     }
   }
@@ -94,7 +111,9 @@ final class TimerViewModel {
   }
 
   private func startClock() {
+    pendingPenalty = inspectionPenalty()
     cancelArm()
+    cancelInspection()
     phase = .running
     elapsedSeconds = 0
     let start = Date()
@@ -117,17 +136,59 @@ final class TimerViewModel {
     runStart = nil
     phase = .stopped
     Haptics.stop(enabled: settings.hapticsEnabled)
-    lastSolveWasPB = onSolveCompleted?(elapsedSeconds, scramble, puzzle) ?? false
+    let penalty = pendingPenalty
+    pendingPenalty = .none
+    lastSolveWasPB = onSolveCompleted?(elapsedSeconds, scramble, puzzle, penalty) ?? false
   }
 
   private func prepareNextSolve() {
     elapsedSeconds = 0
     lastSolveWasPB = false
+    cancelInspection()
     regenerateScramble()
   }
 
   private func cancelArm() {
     armTask?.cancel()
     armTask = nil
+  }
+
+  // ── WCA inspection ────────────────────────────────────────
+  /// Starts the 15-second inspection countdown after the first arm
+  /// completes. Touching both prints again re-arms; the *next* release
+  /// starts the solve clock for real (see `pressEnded()`/`startClock()`).
+  private func beginInspecting() {
+    isInspectionActive = true
+    phase = .inspecting
+    let start = Date()
+    inspectionTask = Task { [weak self] in
+      while !Task.isCancelled {
+        guard let self else { break }
+        self.inspectionSeconds = Date().timeIntervalSince(start)
+        try? await Task.sleep(for: .milliseconds(16))
+      }
+    }
+  }
+
+  private func cancelInspection() {
+    inspectionTask?.cancel()
+    inspectionTask = nil
+    isInspectionActive = false
+    inspectionSeconds = 0
+  }
+
+  private func inspectionPenalty() -> Penalty {
+    guard isInspectionActive else { return .none }
+    return Self.inspectionPenalty(forElapsedSeconds: inspectionSeconds)
+  }
+
+  /// The WCA-style penalty earned from an inspection of the given length:
+  /// none under 15s, +2 between 15–17s, DNF beyond 17s. A pure function so
+  /// the boundary thresholds are directly unit-testable without waiting on
+  /// real elapsed time.
+  static func inspectionPenalty(forElapsedSeconds seconds: Double) -> Penalty {
+    if seconds >= 17 { return .dnf }
+    if seconds >= 15 { return .plusTwo }
+    return .none
   }
 }

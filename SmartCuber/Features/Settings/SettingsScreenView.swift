@@ -6,11 +6,17 @@
 //  left; Sessions & Data and About on the right.
 //
 
+import SwiftData
 import SwiftUI
 
 struct SettingsScreenView: View {
+  @Query(sort: \Solve.date, order: .reverse) private var solves: [Solve]
+
   @Bindable var settings: TimerSettings
   let sessionCount: Int
+  let onManageSessions: () -> Void
+
+  @State private var isChoosingAppearance = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -20,16 +26,26 @@ struct SettingsScreenView: View {
         .padding(.horizontal, 28)
         .padding(.top, 17)
 
-      HStack(alignment: .top, spacing: 22) {
-        leftColumn
-        rightColumn
+      // Multiple self-sizing controls (Slider, Menu) on this screen can
+      // make SwiftUI misjudge the columns' intrinsic height in a fixed
+      // VStack, clipping content above the fold. A ScrollView makes the
+      // page resilient to that regardless of the exact cause.
+      ScrollView(showsIndicators: false) {
+        HStack(alignment: .top, spacing: 22) {
+          leftColumn
+          rightColumn
+        }
+        .padding(.horizontal, 28)
+        .padding(.top, 12)
+        .padding(.bottom, 17)
       }
-      .padding(.horizontal, 28)
-      .padding(.top, 12)
-
-      Spacer(minLength: 0)
     }
     .background(Theme.background.ignoresSafeArea())
+    .confirmationDialog("Appearance", isPresented: $isChoosingAppearance) {
+      ForEach(AppAppearance.allCases) { option in
+        Button(option.label) { settings.appearance = option }
+      }
+    }
   }
 
   private var leftColumn: some View {
@@ -37,7 +53,11 @@ struct SettingsScreenView: View {
       SettingsGroup(title: "Timer") {
         SettingsRow(
           icon: "hand.point.up.fill", label: "Start trigger", detail: settings.startTrigger)
-        SettingsRow(icon: "clock", label: "Hold to arm", detail: settings.holdToArmLabel)
+        SettingsRow(
+          icon: "clock",
+          label: "Hold to arm",
+          sub: settings.holdToArmLabel,
+          expanded: { holdToArmSlider })
         SettingsRow(icon: "clock", label: "Inspection", sub: "WCA 15-second countdown") {
           toggle($settings.inspectionEnabled)
         }
@@ -47,8 +67,16 @@ struct SettingsScreenView: View {
         }
       }
       SettingsGroup(title: "Display") {
-        SettingsRow(icon: "textformat", label: "Timer font", detail: settings.timerFont)
-        SettingsRow(icon: "moon", label: "Appearance", detail: settings.appearance, isLast: true)
+        SettingsRow(icon: "textformat", label: "Timer font") {
+          fontMenu
+        }
+        Button {
+          isChoosingAppearance = true
+        } label: {
+          SettingsRow(
+            icon: "moon", label: "Appearance", detail: settings.appearance.label, isLast: true)
+        }
+        .buttonStyle(.plain)
       }
     }
     .frame(maxWidth: .infinity)
@@ -57,17 +85,22 @@ struct SettingsScreenView: View {
   private var rightColumn: some View {
     VStack(spacing: 16) {
       SettingsGroup(title: "Sessions & data") {
-        SettingsRow(
-          icon: "folder",
-          label: "Manage sessions",
-          sub: "\(sessionCount) session\(sessionCount == 1 ? "" : "s")",
-          showChevron: true)
+        Button(action: onManageSessions) {
+          SettingsRow(
+            icon: "folder",
+            label: "Manage sessions",
+            sub: "\(sessionCount) session\(sessionCount == 1 ? "" : "s")",
+            showChevron: true)
+        }
+        .buttonStyle(.plain)
         SettingsRow(
           icon: "square.and.arrow.up",
           label: "Export solves",
           sub: "CSV · csTimer",
-          showChevron: true,
-          isLast: true)
+          isLast: true
+        ) {
+          exportShareLink
+        }
       }
       SettingsGroup(title: "About") {
         SettingsRow(icon: "info.circle", label: "Version", isLast: true) {
@@ -86,78 +119,32 @@ struct SettingsScreenView: View {
       .tint(Theme.mint)
       .scaleEffect(0.82)
   }
-}
 
-/// An inset, grouped settings card with a small uppercased title.
-private struct SettingsGroup<Content: View>: View {
-  let title: String
-  @ViewBuilder let content: Content
-
-  var body: some View {
-    VStack(alignment: .leading, spacing: 7) {
-      Text(title.uppercased())
-        .font(Theme.sans(10, weight: .semibold))
-        .tracking(1)
-        .foregroundStyle(Theme.tertiary)
-        .padding(.horizontal, 4)
-      VStack(spacing: 0) { content }
-        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 14))
-    }
+  private var holdToArmSlider: some View {
+    Slider(value: $settings.holdToArmSeconds, in: 0.1...2.0, step: 0.05)
+      .tint(Theme.mint)
   }
-}
 
-/// A single settings row: icon tile, title (+ optional subtitle), and either
-/// a trailing detail value, a custom accessory, or a disclosure chevron.
-private struct SettingsRow<Trailing: View>: View {
-  let icon: String
-  let label: String
-  var sub: String?
-  var detail: String?
-  var showChevron = false
-  var isLast = false
-  @ViewBuilder var trailing: () -> Trailing
-
-  var body: some View {
-    VStack(spacing: 0) {
-      HStack(spacing: 13) {
-        Image(systemName: icon)
-          .font(.system(size: 14, weight: .medium))
-          .foregroundStyle(Theme.text)
-          .frame(width: 30, height: 30)
-          .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
-        VStack(alignment: .leading, spacing: 1) {
-          Text(label)
-            .font(Theme.sans(14.5, weight: .regular))
-            .foregroundStyle(Theme.text)
-          if let sub {
-            Text(sub)
-              .font(Theme.sans(11.5, weight: .regular))
-              .foregroundStyle(Theme.tertiary)
-          }
-        }
-        Spacer(minLength: 0)
-        accessory
-      }
-      .padding(.horizontal, 16)
-      .frame(minHeight: 50)
-      if !isLast {
-        Rectangle().fill(Theme.hairline).frame(height: 0.5)
-      }
+  /// Writes the current CSV export to a temp file with a real `.csv` name,
+  /// so the system share sheet treats it as an actual file attachment
+  /// rather than a plain-text blob. `nil` if the write fails.
+  private var exportFileURL: URL? {
+    let csv = SolveCSVExporter.csv(for: solves)
+    let url = FileManager.default.temporaryDirectory
+      .appendingPathComponent("SmartCuber-Solves.csv")
+    do {
+      try csv.write(to: url, atomically: true, encoding: .utf8)
+      return url
+    } catch {
+      return nil
     }
   }
 
-  @ViewBuilder private var accessory: some View {
-    if let detail {
-      HStack(spacing: 5) {
-        Text(detail)
-          .font(Theme.sans(13.5, weight: .regular))
-          .foregroundStyle(Theme.secondary)
-        chevron
-      }
-    } else if showChevron {
-      chevron
+  @ViewBuilder private var exportShareLink: some View {
+    if let url = exportFileURL {
+      ShareLink(item: url) { chevron }
     } else {
-      trailing()
+      chevron
     }
   }
 
@@ -166,24 +153,38 @@ private struct SettingsRow<Trailing: View>: View {
       .font(.system(size: 12, weight: .semibold))
       .foregroundStyle(Theme.tertiary)
   }
-}
 
-extension SettingsRow where Trailing == EmptyView {
-  init(
-    icon: String,
+  private var fontMenu: some View {
+    pickerMenu(label: "Timer font", selection: $settings.timerFont, options: TimerFont.allCases) {
+      $0.label
+    }
+  }
+
+  /// A compact `Menu`/inline-`Picker` accessory, styled like the row's own
+  /// `detail` text + chevron — the same pattern `TimerTopBar.puzzleMenu` uses.
+  private func pickerMenu<Option: Identifiable & Hashable>(
     label: String,
-    sub: String? = nil,
-    detail: String? = nil,
-    showChevron: Bool = false,
-    isLast: Bool = false
-  ) {
-    self.init(
-      icon: icon,
-      label: label,
-      sub: sub,
-      detail: detail,
-      showChevron: showChevron,
-      isLast: isLast,
-      trailing: { EmptyView() })
+    selection: Binding<Option>,
+    options: [Option],
+    display: @escaping (Option) -> String
+  ) -> some View {
+    Menu {
+      Picker(label, selection: selection) {
+        ForEach(options) { option in
+          Text(display(option)).tag(option)
+        }
+      }
+      .pickerStyle(.inline)
+    } label: {
+      HStack(spacing: 5) {
+        Text(display(selection.wrappedValue))
+          .font(Theme.sans(13.5, weight: .regular))
+          .foregroundStyle(Theme.secondary)
+        Image(systemName: "chevron.right")
+          .font(.system(size: 12, weight: .semibold))
+          .foregroundStyle(Theme.tertiary)
+      }
+    }
+    .menuStyle(.borderlessButton)
   }
 }

@@ -19,7 +19,14 @@ final class AppCoordinator {
   /// The solve highlighted in the Solves detail pane, if any.
   var selectedSolveID: PersistentIdentifier?
 
+  /// Whether the Sessions management sheet is presented.
+  var isManagingSessions = false
+
   func select(solve: Solve) {
     selectedSolveID = solve.persistentModelID
+  }
+
+  func presentSessionsManagement() {
+    isManagingSessions = true
   }
 }

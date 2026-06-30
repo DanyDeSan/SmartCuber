@@ -45,4 +45,38 @@ struct SolveRecorderTests {
       duration: 12, scramble: "", puzzle: .threeByThree, in: context)
     #expect(isPB)
   }
+
+  @Test func dnfNeverCountsAsPersonalBest() throws {
+    let context = try makeContext()
+    let isPB = SolveRecorder.record(
+      duration: 5, scramble: "", puzzle: .threeByThree, penalty: .dnf, in: context)
+    #expect(!isPB)
+  }
+
+  @Test func recordsIntoActiveSessionEvenWhenNotMostRecent() throws {
+    let context = try makeContext()
+    let older = Session(name: "Older", createdAt: .now.addingTimeInterval(-3600), isActive: true)
+    let newer = Session(name: "Newer", createdAt: .now)
+    context.insert(older)
+    context.insert(newer)
+
+    SolveRecorder.record(duration: 10, scramble: "", puzzle: .threeByThree, in: context)
+
+    let solves = try context.fetch(FetchDescriptor<Solve>())
+    #expect(solves.first?.session?.name == "Older")
+  }
+
+  @Test func promotesMostRecentSessionWhenNoneIsActiveYet() throws {
+    let context = try makeContext()
+    let older = Session(name: "Older", createdAt: .now.addingTimeInterval(-3600))
+    let newer = Session(name: "Newer", createdAt: .now)
+    context.insert(older)
+    context.insert(newer)
+
+    SolveRecorder.record(duration: 10, scramble: "", puzzle: .threeByThree, in: context)
+
+    let solves = try context.fetch(FetchDescriptor<Solve>())
+    #expect(solves.first?.session?.name == "Newer")
+    #expect(newer.isActive)
+  }
 }

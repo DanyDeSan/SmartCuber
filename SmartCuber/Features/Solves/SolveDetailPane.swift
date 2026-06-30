@@ -100,7 +100,7 @@ struct SolveDetailPane: View {
         .frame(maxWidth: .infinity)
         .frame(height: 40)
         .background(
-          isActive ? activeColor.opacity(0.12) : Color.white.opacity(0.04),
+          isActive ? activeColor.opacity(0.12) : Theme.subtleFill,
           in: RoundedRectangle(cornerRadius: 11))
         .overlay(
           RoundedRectangle(cornerRadius: 11)
@@ -115,7 +115,7 @@ struct SolveDetailPane: View {
         .font(.system(size: 15, weight: .medium))
         .foregroundStyle(Theme.red)
         .frame(width: 44, height: 40)
-        .background(Color.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 11))
+        .background(Theme.subtleFill, in: RoundedRectangle(cornerRadius: 11))
     }
     .buttonStyle(.plain)
   }

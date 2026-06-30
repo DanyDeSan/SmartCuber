@@ -13,11 +13,13 @@ struct FingerTargetView: View {
 
   private var isArmed: Bool { phase == .holding || phase == .ready }
   private var isStop: Bool { phase == .running }
+  private var isInspecting: Bool { phase == .inspecting }
 
   private var color: Color {
     switch phase {
     case .holding: return Theme.red
     case .ready: return Theme.mint
+    case .inspecting: return Theme.amber
     case .running: return Theme.secondary
     default: return Theme.tertiary
     }
@@ -25,13 +27,13 @@ struct FingerTargetView: View {
 
   private var fillOpacity: Double {
     if isArmed { return 0.12 }
-    if isStop { return 0.05 }
+    if isStop || isInspecting { return 0.05 }
     return 0.03
   }
 
   private var borderOpacity: Double {
     if isArmed { return 0.36 }
-    if isStop { return 0.19 }
+    if isStop || isInspecting { return 0.19 }
     return 0.09
   }
 
@@ -43,7 +45,7 @@ struct FingerTargetView: View {
           .padding(-9)
       }
       Circle()
-        .fill((isArmed ? color : Color.white).opacity(fillOpacity))
+        .fill((isArmed ? color : Theme.subtleFillBase).opacity(fillOpacity))
         .overlay(Circle().strokeBorder(color.opacity(borderOpacity), lineWidth: 1.5))
       FingerprintView(color: color, size: 50)
     }

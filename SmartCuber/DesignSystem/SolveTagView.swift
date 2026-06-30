@@ -15,7 +15,7 @@ struct SolveTagView: View {
     if isPersonalBest {
       pill("PB", color: Theme.mint, background: Theme.mint.opacity(0.10), weight: .semibold)
     } else if penalty == .plusTwo {
-      pill("+2", color: Theme.secondary, background: Color.white.opacity(0.05))
+      pill("+2", color: Theme.secondary, background: Theme.subtleFillStrong)
     } else if penalty == .dnf {
       pill("DNF", color: Theme.red, background: Theme.red.opacity(0.10), weight: .semibold)
     }
